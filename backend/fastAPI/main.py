@@ -2,9 +2,13 @@
 # importar FastApi
 # Iniciar servidor : uvicorn main:app --reload
 from fastapi import FastAPI
+from routers import users
 
 # Crear la app
 app = FastAPI()
+
+# Routers
+app.include_router(users.router)
 
 #Paso 2
 # Crear la ruta
