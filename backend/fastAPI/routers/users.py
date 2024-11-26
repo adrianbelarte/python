@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 # Iniciar servidor : uvicorn users:app --reload
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 # Entidad user
 class User(BaseModel):
@@ -22,11 +22,11 @@ async def usersjson():
             {"name": "David", "surname": "Peris","age": 25, "url": "http://David.dev"}]
 
 #Path
-@router.get("/users/")
+@router.get("/")
 async def users():
     return userslist
 
-@router.get("/user/{id}")
+@router.get("/{id}")
 async def user(id: int):
     return searchUser(id)
 
