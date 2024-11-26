@@ -1,10 +1,15 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-# Iniciar servidor : uvicorn users:app --reload
+from typing import List
 
-router = APIRouter(prefix="/users")
+# Crear el router
+router = APIRouter(
+    prefix="/users",  # Prefijo para todas las rutas
+    tags=["users"],  # Categoría para la documentación
+    responses={404: {"message": "No encontrado"}}
+)
 
-# Entidad user
+# Modelo de usuario
 class User(BaseModel):
     id: int
     name: str
@@ -12,74 +17,65 @@ class User(BaseModel):
     age: int
     url: str
 
-userslist = [User(id=1,name="Haydee", surname="Belarte",age=25,url="http://haydee.dev"),
-         User(id=2,name="Adrian", surname="Belarte",age=35,url="http://adrian.dev"),
-         User(id=3,name="David", surname="Peris",age=25,url="http://david.dev")]
+# Lista de usuarios inicial
+users_list = [
+    User(id=1, name="Haydee", surname="Belarte", age=25, url="http://haydee.dev"),
+    User(id=2, name="Adrian", surname="Belarte", age=35, url="http://adrian.dev"),
+    User(id=3, name="David", surname="Peris", age=25, url="http://david.dev"),
+]
 
-@router.get("/usersjson")
-async def usersjson():
-    return [{"name": "Adrián", "surname": "Belarte","age": 34, "url": "http://adrian.dev"},
-            {"name": "David", "surname": "Peris","age": 25, "url": "http://David.dev"}]
+# Rutas
 
-#Path
-@router.get("/")
-async def users():
-    return userslist
+# Obtener todos los usuarios
+@router.get("/", response_model=List[User])
+async def get_users():
+    return users_list
 
-@router.get("/{id}")
-async def user(id: int):
-    return searchUser(id)
-
-# Query
-@router.get("/user/")
-async def user(id: int):
-    return searchUser(id)
-
-def searchUser(id: int):
-    users = filter(lambda user: user.id == id, userslist)
-    try:
-        return list(users)[0]
-    except:
-        return "{no se ha encontrado el usuario}"
-
-# Post
-@router.post("/user/")
-async def user(user: User):
-    if type(searchUser(user.id)) == User:
-        return "{Usuario ya existe}"
-    else:
-        userslist.append(user)
+# Obtener un usuario por ID (Path Parameter)
+@router.get("/{id}", response_model=User)
+async def get_user(id: int):
+    user = search_user(id)
+    if user:
         return user
+    return {"error": "Usuario no encontrado"}
 
-# Put
-@router.put("/user/")
-async def user(user: User):
-    found = False
-    for index, user in enumerate(userslist):
-        if user.id == user.id:
-            userslist[index] = user
-            found = True
-            
-        
-    if not found:
-        return {"error: ""Usuario no actualizado"}
-    else:
+# Obtener un usuario por ID (Query Parameter)
+@router.get("/search/", response_model=User)
+async def get_user_by_query(id: int):
+    user = search_user(id)
+    if user:
         return user
+    return {"error": "Usuario no encontrado"}
 
-# Delete
-@router.delete("/user/{id}")
-async def user(id:int):
+# Crear un nuevo usuario
+@router.post("/", response_model=User)
+async def create_user(user: User):
+    if search_user(user.id):
+        return {"error": "El usuario ya existe"}
+    users_list.append(user)
+    return user
 
-    found = False
+# Actualizar un usuario
+@router.put("/", response_model=User)
+async def update_user(user: User):
+    for index, existing_user in enumerate(users_list):
+        if existing_user.id == user.id:
+            users_list[index] = user
+            return user
+    return {"error": "Usuario no encontrado"}
 
-    for index, user in enumerate(userslist):
+# Eliminar un usuario
+@router.delete("/{id}")
+async def delete_user(id: int):
+    for index, user in enumerate(users_list):
         if user.id == id:
-            del userslist[index]
-            found = True
-            return {"Usuario eliminado con exito"}
-        
-    if not found:
-      return {"error: ""Usuario no encontrado"}
+            del users_list[index]
+            return {"message": "Usuario eliminado con éxito"}
+    return {"error": "Usuario no encontrado"}
+
+# Función auxiliar para buscar usuarios
+def search_user(id: int):
+    return next((user for user in users_list if user.id == id), None)
 
         
 

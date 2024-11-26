@@ -1,24 +1,19 @@
-# Paso 1
-# importar FastApi
-# Iniciar servidor : uvicorn main:app --reload
 from fastapi import FastAPI
-from routers import users
-
+from routers import users  # Importa el router desde users.py
+# uvicorn main:app --reload
 # Crear la app
-app = FastAPI()
+app = FastAPI(
+    title="Mi API",
+    description="Descripción de mi API",
+    version="1.0.0",
+    docs_url="/"  # Mueve Swagger UI a la raíz
+)
 
-# Routers
+
+# Incluir el router de users
 app.include_router(users.router)
 
-#Paso 2
-# Crear la ruta
-@app.get("/")
-async def root():
-    return "Hola FastAPI!"
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
-"""
-# Crear rutas
-@app.get("/ruta")
-async def ruta():
-    return {"ruta":"https://nombre/nombre"}
-"""
